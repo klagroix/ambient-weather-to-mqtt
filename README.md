@@ -8,7 +8,7 @@ I'm sure there are other (read: better) solutions out there for this but I (a) w
 
 ## How it works
 
-Once the container is (running)[#Running] and the weather station is (configured)[#Configure-the-Weather-Station], The weather station sends a request to ambient-weather-to-mqtt periodically. On a new request, ambient-weather-to-mqtt will send a MQTT messages to Home Asistant notifying it of all the available sensors. Every subsequent request, ambient-weather-to-mqtt sends a json payload containing all the sensor data to MQTT. Home Assistant will parse this into individual sensor data.
+Once the container is (running)[#running] and the weather station is (configured)[#configure-the-weather-station], The weather station sends a request to ambient-weather-to-mqtt periodically. On a new request, ambient-weather-to-mqtt will send a MQTT messages to Home Asistant notifying it of all the available sensors. Every subsequent request, ambient-weather-to-mqtt sends a json payload containing all the sensor data to MQTT. Home Assistant will parse this into individual sensor data.
 If you're not using Home Assistant or don't want the device/sensors to show automaitcally, set the `SEND_HA_DISCOVERY_CONFIG` environment variable to `0`.
 
 For many sensors, Home Asistant supports selecting the unit type:    
