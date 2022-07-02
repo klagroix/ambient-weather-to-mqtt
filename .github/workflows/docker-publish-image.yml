@@ -7,6 +7,9 @@ on:
     tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ "main" ]
+  paths-ignore:
+    - '**/README.md'
+    - 'docs/**'
 
 env:
   IMAGE_NAME: "lagroix/ambient-weather-to-mqtt"
