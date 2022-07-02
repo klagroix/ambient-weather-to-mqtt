@@ -171,7 +171,7 @@ docker run --rm \
 
 ## Configure the Weather Station
 
-To configure your weather station to send to ambient-weather-to-mqtt, open the awnet app and set the customized config as follows:
+To configure your weather station to send to ambient-weather-to-mqtt, open the awnet app and set the customized config as follows:    
 ![awnet configuration](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/awnet-config.png?raw=true)
 
 **NOTE:** The trailing questionmark is required! If you don't include it, ambient-weather-to-mqtt won't work. 
