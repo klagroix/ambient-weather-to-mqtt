@@ -29,6 +29,8 @@ To combat this, ambient-weather-to-mqtt creates a multiple sensors for measureme
 
 ## Running
 
+Currently the only supported way of running ambient-weather-to-mqtt is in a Docker container. For your convenience, a container image is auto-published to [lagroix/ambient-weather-to-mqtt](https://hub.docker.com/repository/docker/lagroix/ambient-weather-to-mqtt) on Docker Hub.
+
 ### Prerequisites
 
 1. You must have [MQTT](https://www.home-assistant.io/integrations/mqtt/) installed and running
