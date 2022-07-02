@@ -1,6 +1,4 @@
-name: Docker Publish PR
-
-# Builds PRs and pushes to Docker Hub
+name: Docker Publish Image
 
 on:
   push:
