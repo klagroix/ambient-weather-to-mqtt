@@ -474,6 +474,14 @@ def receive():
 
     return "OK"
 
+# Healthcheck
+@app.route("/health", methods=['GET'])
+def receive():
+    """
+    Flask endpoint for returning status 200
+    """
+    return "OK"
+
 
 # Entrypoint
 def main():
