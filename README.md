@@ -11,13 +11,13 @@ I'm sure there are other (read: better) solutions out there for this but I (a) w
 Once the container is running and the weather station is configured, The weather station sends a request to ambient-weather-to-mqtt periodically. On a new request, ambient-weather-to-mqtt will send a MQTT messages to Home Asistant notifying it of all the available sensors. Every subsequent request, ambient-weather-to-mqtt sends a json payload containing all the sensor data to MQTT. Home Assistant will parse this into individual sensor data.
 If you're not using Home Assistant or don't want the device/sensors to show automaitcally, set the `SEND_HA_DISCOVERY_CONFIG` environment variable to `0`.
 
-For many sensors, Home Asistant supports selecting the unit type:
+For many sensors, Home Asistant supports selecting the unit type:    
 ![Home Assistant entity with multiple units](https://github.com/klagroix/ambient-weather-to-mqtt/blob/docs/docs/ha-unit-select.png?raw=true)
 
-Unfortuntely for others, there is no unit type selection for things like speed (kph/mph) and volume (mm/in):
+Unfortuntely for others, there is no unit type selection for things like speed (kph/mph) and volume (mm/in):    
 ![Home Assistant entity with no unit selection](https://github.com/klagroix/ambient-weather-to-mqtt/blob/docs/docs/ha-no-unit-select.png?raw=true)
 
-To combat this, ambient-weather-to-mqtt creates a multiple sensors for measurements that Home Assistant can't automatically convert:
+To combat this, ambient-weather-to-mqtt creates a multiple sensors for measurements that Home Assistant can't automatically convert:    
 ![Home Assistant multiple entities for different units](https://github.com/klagroix/ambient-weather-to-mqtt/blob/docs/docs/ha-multiple-entities-units.png?raw=true)
 
 
