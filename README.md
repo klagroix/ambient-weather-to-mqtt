@@ -12,19 +12,19 @@ Once the container is [running](#running) and the weather station is [configured
 If you're not using Home Assistant or don't want the device/sensors to show automaitcally, set the `SEND_HA_DISCOVERY_CONFIG` environment variable to `0`.
 
 For many sensors, Home Asistant supports selecting the unit type:    
-![Home Assistant entity with multiple units](https://github.com/klagroix/ambient-weather-to-mqtt/blob/docs/docs/ha-unit-select.png?raw=true)
+![Home Assistant entity with multiple units](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/ha-unit-select.png?raw=true)
 
 Unfortuntely for others, there is no unit type selection for things like speed (kph/mph) and volume (mm/in):    
-![Home Assistant entity with no unit selection](https://github.com/klagroix/ambient-weather-to-mqtt/blob/docs/docs/ha-no-unit-select.png?raw=true)
+![Home Assistant entity with no unit selection](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/ha-no-unit-select.png?raw=true)
 
 To combat this, ambient-weather-to-mqtt creates a multiple sensors for measurements that Home Assistant can't automatically convert:    
-![Home Assistant multiple entities for different units](https://github.com/klagroix/ambient-weather-to-mqtt/blob/docs/docs/ha-multiple-entities-units.png?raw=true)
+![Home Assistant multiple entities for different units](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/ha-multiple-entities-units.png?raw=true)
 
 
 <details>
   <summary>Example Home Assistant Device</summary>
 
-  ![Home Assistant example device](https://github.com/klagroix/ambient-weather-to-mqtt/blob/docs/docs/ha-example-device.png?raw=true)
+  ![Home Assistant example device](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/ha-example-device.png?raw=true)
 </details>
 
 ## Running
@@ -164,7 +164,7 @@ docker run --rm \
 ## Configure the Weather Station
 
 To configure your weather station to send to ambient-weather-to-mqtt, open the awnet app and set the customized config as follows:
-![awnet configuration](https://github.com/klagroix/ambient-weather-to-mqtt/blob/docs/docs/awnet-config.png?raw=true)
+![awnet configuration](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/awnet-config.png?raw=true)
 
 **NOTE:** The trailing questionmark is required! If you don't include it, ambient-weather-to-mqtt won't work. 
 
