@@ -13,12 +13,14 @@ from mergedeep import merge
 DEBUG = bool(int(os.getenv("DEBUG", False)))
 LISTEN_PORT = int(os.getenv("LISTEN_PORT", 8000))
 PRECISION = int(os.getenv("PRECISION", 2))
-SEND_HA_DISCOVERY_CONFIG = bool(int(os.getenv("SEND_HA_DISCOVERY_CONFIG", True)))  # (default) If we should send a message to a discovery topic when a new client connects
+# (default) If we should send a message to a discovery topic when a new client connects
+SEND_HA_DISCOVERY_CONFIG = bool(int(os.getenv("SEND_HA_DISCOVERY_CONFIG", True)))
 HA_DISCOVERY_PREFIX = os.getenv("HA_DISCOVERY_PREFIX", "homeassistant")
-HA_BIRTH_TOPIC = os.getenv("HA_BIRTH_TOPIC", "homeassistant/status")  # We watch this topic for HA coming online. When it does, we wipe the known_sensors dict so we'll re-send sensor config messages
+# We watch this topic for HA coming online. When it does, we wipe the known_sensors dict so we'll re-send sensor config messages)
+HA_BIRTH_TOPIC = os.getenv("HA_BIRTH_TOPIC", "homeassistant/status")
 HA_BIRTH_TOPIC_ONLINE = os.getenv("HA_BIRTH_TOPIC_ONLINE", "online")
-
-MAC_NAME_MAPPING = os.getenv("MAC_NAME_MAPPING", None)  # A comma separated list of mac addresses and their name. Ex: 00:00:00:00:00:00/Weather Station
+# A comma separated list of mac addresses and their name. Ex: 00:00:00:00:00:00/Weather Station
+MAC_NAME_MAPPING = os.getenv("MAC_NAME_MAPPING", None)
 MQTT_TOPIC_JSON = os.getenv("MQTT_TOPIC_JSON", "sensor")  # What topic should we publish on?
 
 KNOWN_SENSORS_CACHE_FILE = os.getenv("KNOWN_SENSORS_CACHE_FILE", "known_sensors.json")
@@ -65,7 +67,8 @@ if os.path.isfile(KNOWN_SENSORS_LOCK_FILE):
     logger.info("Clearing previous KNOWN_SENSORS_LOCK_FILE")
     os.remove(KNOWN_SENSORS_LOCK_FILE)
 
-# As Flask can spawn multiple processes, we need a way to keep the known_sensors known among all threads/processes. As such, I've opted for file locking for now
+# As Flask can spawn multiple processes, we need a way to keep the known_sensors known among all threads/processes.
+# As such, I've opted for file locking for now
 known_sensors_lock = fasteners.InterProcessLock(KNOWN_SENSORS_LOCK_FILE)
 app = Flask(__name__)
 mac_names = {}
@@ -176,7 +179,8 @@ def __translate_topic_to_dict(data, key, value):
     return merge(data, single_dict)
 
 
-def send_ha_sensor_config(send_config, mac, stationtype, sensorname, uniqueid, value_template, unit_of_measurement=None, device_class=None, icon=None, state_class=None):
+def send_ha_sensor_config(send_config, mac, stationtype, sensorname, uniqueid, value_template, unit_of_measurement=None,
+                          device_class=None, icon=None, state_class=None):
     """
     Sends the configuration of the sensor to HA if we haven't already
     :param mac: MAC address of the device
@@ -284,49 +288,63 @@ def generate_sensor_dict(args, send_ha_config=False):
         elif key == "PASSKEY" or key == "mac":
             pass  # This was set previously outside of the loop
         elif key == "battout":
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Outdoor Battery", "station.battery.outdoor", "{{ value_json.station.battery.outdoor }}", device_class="battery", icon="mdi:battery")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Outdoor Battery", "station.battery.outdoor",
+                                  "{{ value_json.station.battery.outdoor }}", device_class="battery", icon="mdi:battery")
             __translate_topic_to_dict(data_dict, "station.battery.outdoor", __convert_battery_to_str(value))
         elif key == "batt_co2":
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "CO2 Battery", "station.battery.co2", "{{ value_json.station.battery.co2 }}", device_class="battery", icon="mdi:battery")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "CO2 Battery", "station.battery.co2", "{{ value_json.station.battery.co2 }}",
+                                  device_class="battery", icon="mdi:battery")
             __translate_topic_to_dict(data_dict, "station.battery.co2", __convert_battery_to_str(value))
         elif key == "humidityin":
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Indoor Humidity", "humidity.indoor.percentage", "{{ value_json.humidity.indoor.percentage }}", unit_of_measurement="%", device_class="humidity")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Indoor Humidity", "humidity.indoor.percentage",
+                                  "{{ value_json.humidity.indoor.percentage }}", unit_of_measurement="%", device_class="humidity")
             __translate_topic_to_dict(data_dict, "humidity.indoor.percentage", int(value))
         elif key == "humidity":
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Outdoor Humidity", "humidity.outdoor.percentage", "{{ value_json.humidity.outdoor.percentage }}", unit_of_measurement="%", device_class="humidity")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Outdoor Humidity", "humidity.outdoor.percentage",
+                                  "{{ value_json.humidity.outdoor.percentage }}", unit_of_measurement="%", device_class="humidity")
             __translate_topic_to_dict(data_dict, "humidity.outdoor.percentage", int(value))
         elif key == "tempinf":
             # Only send once as HA supports conversion (https://developers.home-assistant.io/docs/core/entity/sensor/#available-device-classes)
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Indoor Temperature", "temperature.indoor.celsius", "{{ value_json.temperature.indoor.celsius }}", unit_of_measurement="°C", device_class="temperature")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Indoor Temperature", "temperature.indoor.celsius",
+                                  "{{ value_json.temperature.indoor.celsius }}", unit_of_measurement="°C", device_class="temperature")
             __translate_topic_to_dict(data_dict, "temperature.indoor.fahrenheit", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "temperature.indoor.celsius", __rounded(__convert_f_to_c(value)))  # Convert F to C
         elif key == "tempf":
             # Only send once as HA supports conversion (https://developers.home-assistant.io/docs/core/entity/sensor/#available-device-classes)
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Outdoor Temperature", "temperature.outdoor.celsius", "{{ value_json.temperature.outdoor.celsius }}", unit_of_measurement="°C", device_class="temperature")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Outdoor Temperature", "temperature.outdoor.celsius",
+                                  "{{ value_json.temperature.outdoor.celsius }}", unit_of_measurement="°C", device_class="temperature")
             __translate_topic_to_dict(data_dict, "temperature.outdoor.fahrenheit", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "temperature.outdoor.celsius", __rounded(__convert_f_to_c(value)))  # Convert F to C
         elif key == "baromrelin":
             # Only send once as HA supports conversion (https://developers.home-assistant.io/docs/core/entity/sensor/#available-device-classes)
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Relative Pressure", "pressure.relative.mmhg", "{{ value_json.pressure.relative.mmhg }}", unit_of_measurement="mmHg", device_class="pressure")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Relative Pressure", "pressure.relative.mmhg",
+                                  "{{ value_json.pressure.relative.mmhg }}", unit_of_measurement="mmHg", device_class="pressure")
             __translate_topic_to_dict(data_dict, "pressure.relative.inhg", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "pressure.relative.mmhg", __rounded(__convert_in_to_mm(value)))  # Convert inHg to mmHg
             __translate_topic_to_dict(data_dict, "pressure.relative.hpa", __rounded(__convert_inhg_to_hpa(value)))  # Convert inHg to hPa
         elif key == "baromabsin":
             # Only send once as HA supports conversion (https://developers.home-assistant.io/docs/core/entity/sensor/#available-device-classes)
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Absolute Pressure", "pressure.absolute.mmhg", "{{ value_json.pressure.absolute.mmhg }}", unit_of_measurement="mmHg", device_class="pressure")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Absolute Pressure", "pressure.absolute.mmhg",
+                                  "{{ value_json.pressure.absolute.mmhg }}", unit_of_measurement="mmHg", device_class="pressure")
             __translate_topic_to_dict(data_dict, "pressure.absolute.inhg", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "pressure.absolute.mmhg", __rounded(__convert_in_to_mm(value)))  # Convert inHg to mmHg
             __translate_topic_to_dict(data_dict, "pressure.absolute.hpa", __rounded(__convert_inhg_to_hpa(value)))  # Convert inHg to hPa
         elif key == "winddir":
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Direction", "wind.direction.degrees", "{{ value_json.wind.direction.degrees }}", unit_of_measurement="°", icon="mdi:compass")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Direction", "wind.direction.degrees",
+                                  "{{ value_json.wind.direction.degrees }}", unit_of_measurement="°", icon="mdi:compass")
             __translate_topic_to_dict(data_dict, "wind.direction.degrees", int(value))
         elif key == "windspeedmph":
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Speed (mph)", "wind.speed.mph", "{{ value_json.wind.speed.mph }}", unit_of_measurement="mph", icon="mdi:weather-windy")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Speed (kph)", "wind.speed.kph", "{{ value_json.wind.speed.kph }}", unit_of_measurement="kph", icon="mdi:weather-windy")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Speed (m/s)", "wind.speed.mps", "{{ value_json.wind.speed.mps }}", unit_of_measurement="m/s", icon="mdi:weather-windy")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Speed (ft/s)", "wind.speed.ftps", "{{ value_json.wind.speed.ftps }}", unit_of_measurement="ft/s", icon="mdi:weather-windy")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Speed (knots)", "wind.speed.knots", "{{ value_json.wind.speed.knots }}", unit_of_measurement="knots", icon="mdi:weather-windy")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Speed (mph)", "wind.speed.mph", "{{ value_json.wind.speed.mph }}",
+                                  unit_of_measurement="mph", icon="mdi:weather-windy")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Speed (kph)", "wind.speed.kph", "{{ value_json.wind.speed.kph }}",
+                                  unit_of_measurement="kph", icon="mdi:weather-windy")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Speed (m/s)", "wind.speed.mps", "{{ value_json.wind.speed.mps }}",
+                                  unit_of_measurement="m/s", icon="mdi:weather-windy")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Speed (ft/s)", "wind.speed.ftps", "{{ value_json.wind.speed.ftps }}",
+                                  unit_of_measurement="ft/s", icon="mdi:weather-windy")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Speed (knots)", "wind.speed.knots", "{{ value_json.wind.speed.knots }}",
+                                  unit_of_measurement="knots", icon="mdi:weather-windy")
             __translate_topic_to_dict(data_dict, "wind.speed.mph", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "wind.speed.kph", __rounded(__convert_mph_to_kph(value)))  # Convert mph to kph
             __translate_topic_to_dict(data_dict, "wind.speed.mps", __rounded(__convert_mph_to_mps(value)))  # Convert mph to m/s
@@ -334,11 +352,16 @@ def generate_sensor_dict(args, send_ha_config=False):
             __translate_topic_to_dict(data_dict, "wind.speed.knots", __rounded(__convert_mph_to_knots(value)))  # Convert mph to knots
         elif key == "windgustmph":
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Gust (mph)", "wind.gust.mph", "{{ value_json.wind.gust.mph }}", unit_of_measurement="mph", icon="mdi:weather-windy")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Gust (kph)", "wind.gust.kph", "{{ value_json.wind.gust.kph }}", unit_of_measurement="kph", icon="mdi:weather-windy")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Gust (m/s)", "wind.gust.mps", "{{ value_json.wind.gust.mps }}", unit_of_measurement="m/s", icon="mdi:weather-windy")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Gust (ft/s)", "wind.gust.ftps", "{{ value_json.wind.gust.ftps }}", unit_of_measurement="ft/s", icon="mdi:weather-windy")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Gust (knots)", "wind.gust.knots", "{{ value_json.wind.gust.knots }}", unit_of_measurement="knots", icon="mdi:weather-windy")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Gust (mph)", "wind.gust.mph", "{{ value_json.wind.gust.mph }}",
+                                  unit_of_measurement="mph", icon="mdi:weather-windy")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Gust (kph)", "wind.gust.kph", "{{ value_json.wind.gust.kph }}",
+                                  unit_of_measurement="kph", icon="mdi:weather-windy")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Gust (m/s)", "wind.gust.mps", "{{ value_json.wind.gust.mps }}",
+                                  unit_of_measurement="m/s", icon="mdi:weather-windy")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Gust (ft/s)", "wind.gust.ftps", "{{ value_json.wind.gust.ftps }}",
+                                  unit_of_measurement="ft/s", icon="mdi:weather-windy")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Gust (knots)", "wind.gust.knots", "{{ value_json.wind.gust.knots }}",
+                                  unit_of_measurement="knots", icon="mdi:weather-windy")
             __translate_topic_to_dict(data_dict, "wind.gust.mph", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "wind.gust.kph", __rounded(__convert_mph_to_kph(value)))  # Convert mph to kph
             __translate_topic_to_dict(data_dict, "wind.gust.mps", __rounded(__convert_mph_to_mps(value)))  # Convert mph to m/s
@@ -346,11 +369,16 @@ def generate_sensor_dict(args, send_ha_config=False):
             __translate_topic_to_dict(data_dict, "wind.gust.knots", __rounded(__convert_mph_to_knots(value)))  # Convert mph to knots
         elif key == "maxdailygust":
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Max. Daily Gust (mph)", "wind.daily.gust.mph", "{{ value_json.wind.daily.gust.mph }}", unit_of_measurement="mph", icon="mdi:weather-windy")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Max. Daily Gust (kph)", "wind.daily.gust.kph", "{{ value_json.wind.daily.gust.kph }}", unit_of_measurement="kph", icon="mdi:weather-windy")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Max. Daily Gust (m/s)", "wind.daily.gust.mps", "{{ value_json.wind.daily.gust.mps }}", unit_of_measurement="m/s", icon="mdi:weather-windy")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Max. Daily Gust (ft/s)", "wind.daily.gust.ftps", "{{ value_json.wind.daily.gust.ftps }}", unit_of_measurement="ft/s", icon="mdi:weather-windy")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Max. Daily Gust (knots)", "wind.daily.gust.knots", "{{ value_json.wind.daily.gust.knots }}", unit_of_measurement="knots", icon="mdi:weather-windy")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Max. Daily Gust (mph)", "wind.daily.gust.mph",
+                                  "{{ value_json.wind.daily.gust.mph }}", unit_of_measurement="mph", icon="mdi:weather-windy")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Max. Daily Gust (kph)", "wind.daily.gust.kph",
+                                  "{{ value_json.wind.daily.gust.kph }}", unit_of_measurement="kph", icon="mdi:weather-windy")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Max. Daily Gust (m/s)", "wind.daily.gust.mps",
+                                  "{{ value_json.wind.daily.gust.mps }}", unit_of_measurement="m/s", icon="mdi:weather-windy")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Max. Daily Gust (ft/s)", "wind.daily.gust.ftps",
+                                  "{{ value_json.wind.daily.gust.ftps }}", unit_of_measurement="ft/s", icon="mdi:weather-windy")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Max. Daily Gust (knots)", "wind.daily.gust.knots",
+                                  "{{ value_json.wind.daily.gust.knots }}", unit_of_measurement="knots", icon="mdi:weather-windy")
             __translate_topic_to_dict(data_dict, "wind.daily.gust.mph", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "wind.daily.gust.kph", __rounded(__convert_mph_to_kph(value)))  # Convert mph to kph
             __translate_topic_to_dict(data_dict, "wind.daily.gust.mps", __rounded(__convert_mph_to_mps(value)))  # Convert mph to m/s
@@ -358,48 +386,64 @@ def generate_sensor_dict(args, send_ha_config=False):
             __translate_topic_to_dict(data_dict, "wind.daily.gust.knots", __rounded(__convert_mph_to_knots(value)))  # Convert mph to knots
         elif key == "hourlyrainin":
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Hourly Rain (in)", "rain.hourly.in", "{{ value_json.rain.hourly.in }}", unit_of_measurement="in", icon="mdi:water")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Hourly Rain (mm)", "rain.hourly.mm", "{{ value_json.rain.hourly.mm }}", unit_of_measurement="mm", icon="mdi:water")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Hourly Rain (in)", "rain.hourly.in", "{{ value_json.rain.hourly.in }}",
+                                  unit_of_measurement="in", icon="mdi:water")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Hourly Rain (mm)", "rain.hourly.mm", "{{ value_json.rain.hourly.mm }}",
+                                  unit_of_measurement="mm", icon="mdi:water")
             __translate_topic_to_dict(data_dict, "rain.hourly.in", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "rain.hourly.mm", __rounded(__convert_in_to_mm(value)))  # Convert inches to mm
         elif key == "eventrainin":
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Event Rain (in)", "rain.event.in", "{{ value_json.rain.event.in }}", unit_of_measurement="in", icon="mdi:water")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Event Rain (mm)", "rain.event.mm", "{{ value_json.rain.event.mm }}", unit_of_measurement="mm", icon="mdi:water")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Event Rain (in)", "rain.event.in", "{{ value_json.rain.event.in }}",
+                                  unit_of_measurement="in", icon="mdi:water")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Event Rain (mm)", "rain.event.mm", "{{ value_json.rain.event.mm }}",
+                                  unit_of_measurement="mm", icon="mdi:water")
             __translate_topic_to_dict(data_dict, "rain.event.in", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "rain.event.mm", __rounded(__convert_in_to_mm(value)))  # Convert inches to mm
         elif key == "dailyrainin":
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Daily Rain (in)", "rain.daily.in", "{{ value_json.rain.daily.in }}", unit_of_measurement="in", icon="mdi:water")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Daily Rain (mm)", "rain.daily.mm", "{{ value_json.rain.daily.mm }}", unit_of_measurement="mm", icon="mdi:water")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Daily Rain (in)", "rain.daily.in", "{{ value_json.rain.daily.in }}",
+                                  unit_of_measurement="in", icon="mdi:water")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Daily Rain (mm)", "rain.daily.mm", "{{ value_json.rain.daily.mm }}",
+                                  unit_of_measurement="mm", icon="mdi:water")
             __translate_topic_to_dict(data_dict, "rain.daily.in", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "rain.daily.mm", __rounded(__convert_in_to_mm(value)))  # Convert inches to mm
         elif key == "weeklyrainin":
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Weekly Rain (in)", "rain.weekly.in", "{{ value_json.rain.weekly.in }}", unit_of_measurement="in", icon="mdi:water")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Weekly Rain (mm)", "rain.weekly.mm", "{{ value_json.rain.weekly.mm }}", unit_of_measurement="mm", icon="mdi:water")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Weekly Rain (in)", "rain.weekly.in", "{{ value_json.rain.weekly.in }}",
+                                  unit_of_measurement="in", icon="mdi:water")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Weekly Rain (mm)", "rain.weekly.mm", "{{ value_json.rain.weekly.mm }}",
+                                  unit_of_measurement="mm", icon="mdi:water")
             __translate_topic_to_dict(data_dict, "rain.weekly.in", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "rain.weekly.mm", __rounded(__convert_in_to_mm(value)))  # Convert inches to mm
         elif key == "monthlyrainin":
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Monthly Rain (in)", "rain.monthly.in", "{{ value_json.rain.monthly.in }}", unit_of_measurement="in", icon="mdi:water")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Monthly Rain (mm)", "rain.monthly.mm", "{{ value_json.rain.monthly.mm }}", unit_of_measurement="mm", icon="mdi:water")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Monthly Rain (in)", "rain.monthly.in", "{{ value_json.rain.monthly.in }}",
+                                  unit_of_measurement="in", icon="mdi:water")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Monthly Rain (mm)", "rain.monthly.mm", "{{ value_json.rain.monthly.mm }}",
+                                  unit_of_measurement="mm", icon="mdi:water")
             __translate_topic_to_dict(data_dict, "rain.monthly.in", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "rain.monthly.mm", __rounded(__convert_in_to_mm(value)))  # Convert inches to mm
         elif key == "totalrainin":
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Total Rain (in)", "rain.total.in", "{{ value_json.rain.total.in }}", unit_of_measurement="in", icon="mdi:water", state_class="total")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Total Rain (mm)", "rain.total.mm", "{{ value_json.rain.total.mm }}", unit_of_measurement="mm", icon="mdi:water", state_class="total")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Total Rain (in)", "rain.total.in", "{{ value_json.rain.total.in }}",
+                                  unit_of_measurement="in", icon="mdi:water", state_class="total")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Total Rain (mm)", "rain.total.mm", "{{ value_json.rain.total.mm }}",
+                                  unit_of_measurement="mm", icon="mdi:water", state_class="total")
             __translate_topic_to_dict(data_dict, "rain.total.in", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "rain.total.mm", __rounded(__convert_in_to_mm(value)))  # Convert inches to mm
         elif key == "solarradiation":
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Solar Radiation (W/m²)", "solarradiation.wm2", "{{ value_json.solarradiation.wm2 }}", unit_of_measurement="W/m²", icon="mdi:white-balance-sunny")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Solar Radiation (lux)", "solarradiation.lux", "{{ value_json.solarradiation.lux }}", unit_of_measurement="lux", icon="mdi:white-balance-sunny")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Solar Radiation (W/m²)", "solarradiation.wm2",
+                                  "{{ value_json.solarradiation.wm2 }}", unit_of_measurement="W/m²", icon="mdi:white-balance-sunny")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Solar Radiation (lux)", "solarradiation.lux",
+                                  "{{ value_json.solarradiation.lux }}", unit_of_measurement="lux", icon="mdi:white-balance-sunny")
             __translate_topic_to_dict(data_dict, "solarradiation.wm2", __rounded(float(value)))
-            __translate_topic_to_dict(data_dict, "solarradiation.lux", __rounded(__convert_wm2_to_lux(value)))  # Convert W/m^2 to lux (See https://ambientweather.com/faqs/question/view/id/1452/.)
+            # Convert W/m^2 to lux (See https://ambientweather.com/faqs/question/view/id/1452/.)
+            __translate_topic_to_dict(data_dict, "solarradiation.lux", __rounded(__convert_wm2_to_lux(value)))
         elif key == "uv":
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "UV Index", "uv.index", "{{ value_json.uv.index }}", unit_of_measurement="Index", icon="mdi:white-balance-sunny")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "UV Index", "uv.index", "{{ value_json.uv.index }}", unit_of_measurement="Index",
+                                  icon="mdi:white-balance-sunny")
             __translate_topic_to_dict(data_dict, "uv.index", int(value))
 
     logger.info("Done generating dict")
