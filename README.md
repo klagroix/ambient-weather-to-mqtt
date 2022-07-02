@@ -29,6 +29,12 @@ To combat this, ambient-weather-to-mqtt creates a multiple sensors for measureme
 
 ## Running
 
+### Prerequisites
+
+1. You must have [MQTT](https://www.home-assistant.io/integrations/mqtt/) installed and running
+2. You must have a way of running docker containers
+3. You must have an Ambient Weather weather station (tested with WS-2902C)
+
 ### Docker
 
 The following command can be used to run the docker container locally. Update the environment variables to suit your environment. A full list of environment variables can be seen below.
