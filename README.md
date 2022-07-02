@@ -2,13 +2,27 @@
 
 Small application to listen locally for events from an Ambient Weather station and forward them to MQTT
 
+This has only been tested with the 'Ambient Weather WS-2902C' Weather Station. Other stations may have other sensors. Feel free to file an issue with an example log (it should show the request parameters)
+
 I'm sure there are other (read: better) solutions out there for this but I (a) wanted to build something myself and (b) the one project I did look at only did imperial measurements - I want my rain in mm!
 
 ## Install / Run the container
 
 ### Docker
 
-TODO
+The following command can be used to run the docker container locally. Update the environment variables to suit your environment. A full list of environment variables can be seen below.
+
+```shell
+docker run --rm \
+ --name=test-ambient-weather \
+ -p 8000:8000 \
+ -e MQTT_HOST=192.168.1.x \
+ -e MQTT_PORT=1883 \
+ -e MQTT_USERNAME=yyyyyyyyyyyyyy \
+ -e MQTT_PASSWORD=xxxxxxxxxxxxxx \
+ -e MAC_NAME_MAPPING="00:00:00:00:00:00/Backyard Weather Station" \
+ lagroix/ambient-weather-to-mqtt:latest
+```
 
 ### Kubernetes
 
@@ -54,6 +68,9 @@ The Ambient Weather spec is defined here: https://ambientweather.com/faqs/questi
 
 # TODO:
 * Add Dockerfile
+    * build and push PR
+    * build and push main (`main` tag?)
+    * build and push release (`v#.#.#`)
 * Lint
 * Github CI - publish to docker
 * Document poss. env vars
