@@ -403,25 +403,25 @@ def generate_sensor_dict(args, send_ha_config=False):
         elif key == "dailyrainin":
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Daily Rain (in)", "rain.daily.in", "{{ value_json.rain.daily.in }}",
-                                  unit_of_measurement="in", icon="mdi:water")
+                                  unit_of_measurement="in", icon="mdi:water", state_class="total")
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Daily Rain (mm)", "rain.daily.mm", "{{ value_json.rain.daily.mm }}",
-                                  unit_of_measurement="mm", icon="mdi:water")
+                                  unit_of_measurement="mm", icon="mdi:water", state_class="total")
             __translate_topic_to_dict(data_dict, "rain.daily.in", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "rain.daily.mm", __rounded(__convert_in_to_mm(value)))  # Convert inches to mm
         elif key == "weeklyrainin":
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Weekly Rain (in)", "rain.weekly.in", "{{ value_json.rain.weekly.in }}",
-                                  unit_of_measurement="in", icon="mdi:water")
+                                  unit_of_measurement="in", icon="mdi:water", state_class="total")
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Weekly Rain (mm)", "rain.weekly.mm", "{{ value_json.rain.weekly.mm }}",
-                                  unit_of_measurement="mm", icon="mdi:water")
+                                  unit_of_measurement="mm", icon="mdi:water", state_class="total")
             __translate_topic_to_dict(data_dict, "rain.weekly.in", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "rain.weekly.mm", __rounded(__convert_in_to_mm(value)))  # Convert inches to mm
         elif key == "monthlyrainin":
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Monthly Rain (in)", "rain.monthly.in", "{{ value_json.rain.monthly.in }}",
-                                  unit_of_measurement="in", icon="mdi:water")
+                                  unit_of_measurement="in", icon="mdi:water", state_class="total")
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Monthly Rain (mm)", "rain.monthly.mm", "{{ value_json.rain.monthly.mm }}",
-                                  unit_of_measurement="mm", icon="mdi:water")
+                                  unit_of_measurement="mm", icon="mdi:water", state_class="total")
             __translate_topic_to_dict(data_dict, "rain.monthly.in", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "rain.monthly.mm", __rounded(__convert_in_to_mm(value)))  # Convert inches to mm
         elif key == "totalrainin":
