@@ -2,7 +2,7 @@ import os
 import sys
 import paho.mqtt.client as mqtt
 from loguru import logger
-from app import HA_BIRTH_TOPIC, HA_BIRTH_TOPIC_ONLINE
+from app import HA_BIRTH_TOPIC, HA_BIRTH_TOPIC_ONLINE, SEND_HA_DISCOVERY_CONFIG
 
 # Env vars
 MQTT_HOST = os.getenv("MQTT_HOST", None)
@@ -33,9 +33,15 @@ mqtt_client = None
 # The callback for when the client receives a CONNACK response from the server.
 def __on_connect(client, userdata, flags, rc):
     logger.info("Connected with result code {rc}".format(rc=str(rc)))
+
     if rc == 0:
         # Set as retain so anyone wondering if the device is online or not knows regardles of whether they were listening at the time
         publish(MQTT_TOPIC_ONLINE, "online", retain=True)
+
+    # We subscribe during the on_connect callback to be more resilient to connect/disconnects
+    if bool(SEND_HA_DISCOVERY_CONFIG):
+        logger.info("Subscribing to HA Birth topic: {topic}".format(topic=HA_BIRTH_TOPIC))
+        subscribe(HA_BIRTH_TOPIC)
 
 
 # The callback when we receive a message

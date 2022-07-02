@@ -545,9 +545,6 @@ def main():
     logger.debug("Debug is enabled")
     mqtt.connect()
 
-    if bool(SEND_HA_DISCOVERY_CONFIG):
-        logger.info("Subscribing to HA Birth topic: {topic}".format(topic=HA_BIRTH_TOPIC))
-        mqtt.subscribe(HA_BIRTH_TOPIC)
     app.run(host='0.0.0.0', port=LISTEN_PORT)
 
 
