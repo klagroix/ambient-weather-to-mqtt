@@ -3,6 +3,10 @@ name: Docker Publish PR
 # Builds PRs and pushes to Docker Hub
 
 on:
+  push:
+    branches: [ "main" ]
+    # Publish semver tags as releases.
+    tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ "main" ]
 
