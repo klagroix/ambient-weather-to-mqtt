@@ -206,5 +206,3 @@ The Ambient Weather spec is defined here: https://ambientweather.com/faqs/questi
 
 ## Future items
 * Stop using the flask development server (i.e. use something like Gunicorn)
-* Add latest tag to releases
-* Create a Release
