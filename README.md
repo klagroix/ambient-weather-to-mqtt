@@ -6,6 +6,27 @@ This has only been tested with the 'Ambient Weather WS-2902C' Weather Station. O
 
 I'm sure there are other (read: better) solutions out there for this but I (a) wanted to build something myself and (b) the one project I did look at only did imperial measurements - I want my rain in mm!
 
+## How it works
+
+Once the container is running and the weather station is configured, The weather station sends a request to ambient-weather-to-mqtt periodically. On a new request, ambient-weather-to-mqtt will send a MQTT messages to Home Asistant notifying it of all the available sensors. Every subsequent request, ambient-weather-to-mqtt sends a json payload containing all the sensor data to MQTT. Home Assistant will parse this into individual sensor data.
+If you're not using Home Assistant or don't want the device/sensors to show automaitcally, set the `SEND_HA_DISCOVERY_CONFIG` environment variable to `0`.
+
+For many sensors, Home Asistant supports selecting the unit type:
+![Home Assistant entity with multiple units](https://github.com/klagroix/ambient-weather-to-mqtt/blob/docs/docs/ha-unit-select.png?raw=true)
+
+Unfortuntely for others, there is no unit type selection for things like speed (kph/mph) and volume (mm/in):
+![Home Assistant entity with no unit selection](https://github.com/klagroix/ambient-weather-to-mqtt/blob/docs/docs/ha-no-unit-select.png?raw=true)
+
+To combat this, ambient-weather-to-mqtt creates a multiple sensors for measurements that Home Assistant can't automatically convert:
+![Home Assistant multiple entities for different units](https://github.com/klagroix/ambient-weather-to-mqtt/blob/docs/docs/ha-multiple-entities-units.png?raw=true)
+
+
+<details>
+  <summary>Example Home Assistant Device</summary>
+
+  ![Home Assistant example device](https://github.com/klagroix/ambient-weather-to-mqtt/blob/docs/docs/ha-example-device.png?raw=true)
+</details>
+
 ## Running
 
 ### Docker
