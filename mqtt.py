@@ -32,10 +32,11 @@ mqtt_client = None
 
 # The callback for when the client receives a CONNACK response from the server.
 def __on_connect(client, userdata, flags, rc):
-    logger.info("Connected with result code "+str(rc))
+    logger.info("Connected with result code {rc}".format(rc=str(rc)))
     if rc == 0:
         # Set as retain so anyone wondering if the device is online or not knows regardles of whether they were listening at the time
-        publish(MQTT_TOPIC_ONLINE, "online", retain=True) 
+        publish(MQTT_TOPIC_ONLINE, "online", retain=True)
+
 
 # The callback when we receive a message
 def __on_message(client, userdata, msg):
@@ -49,8 +50,6 @@ def __on_message(client, userdata, msg):
             logger.info("We have a home assistant online message, we're clearing out known sensors")
             from app import clear_known_sensors
             clear_known_sensors()
-
-
 
 
 # Connect to the MQTT server
@@ -75,6 +74,7 @@ def connect():
     logger.debug("Done")
     return mqtt_client
 
+
 def publish(topic, payload, insert_prefix=True, retain=False):
     global mqtt_client
 
@@ -84,9 +84,10 @@ def publish(topic, payload, insert_prefix=True, retain=False):
 
     if insert_prefix:
         topic = "{prefix}/{topic}".format(prefix=MQTT_PREFIX, topic=topic)
-    
+
     logger.info("Publishing message to {topic} (payload: {payload})".format(topic=topic, payload=payload))
     mqtt_client.publish(topic, payload, retain=retain)
+
 
 def subscribe(topic):
     global mqtt_client
@@ -98,4 +99,3 @@ def subscribe(topic):
     logger.info("Subscribing to topic {topic}".format(topic=topic))
 
     mqtt_client.subscribe(topic)
-
