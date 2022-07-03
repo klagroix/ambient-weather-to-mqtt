@@ -394,6 +394,16 @@ def generate_sensor_dict(args, send_ha_config=False):
                                   "{{ value_json.rain.hourlyrate.mmh }}", unit_of_measurement="mm/h", icon="mdi:water", state_class="total")
             __translate_topic_to_dict(data_dict, "rain.hourlyrate.inh", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "rain.hourlyrate.mmh", __rounded(__convert_in_to_mm(value)))  # Convert inches/h to mm/h
+
+            # We evaluate whether it's raining using the hourly rain rate:
+            #   https://ambientweather.com/faqs/question/view/id/1454/
+            rain_status = "Not Raining"
+            if float(value) > 0:
+                # It's currently raining
+                rain_status = "Raining"
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Rain Status", "rain.currentstatus",
+                                  "{{ value_json.rain.currentstatus }}", icon="mdi:water")
+            __translate_topic_to_dict(data_dict, "rain.currentstatus", rain_status)
         elif key == "eventrainin":
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Event Rain (in)", "rain.event.in", "{{ value_json.rain.event.in }}",
