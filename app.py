@@ -386,14 +386,14 @@ def generate_sensor_dict(args, send_ha_config=False):
             __translate_topic_to_dict(data_dict, "wind.daily.gust.knots", __rounded(__convert_mph_to_knots(value)))  # Convert mph to knots
         elif key == "hourlyrainin":
             # Even though you'd think hourlyrainin and dailyrainin would be similar measurements, they're not...
-            #   hourlyrainin is an hourly rate (in/hr) while the others are total volume
+            #   hourlyrainin is an hourly rate (in/h) while the others are total volume
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Hourly Rain Rate (in/hr)", "rain.hourlyrate.inhr",
-                                  "{{ value_json.rain.hourlyrate.inhr }}", unit_of_measurement="in/hr", icon="mdi:water", state_class="total")
-            send_ha_sensor_config(send_ha_config, mac, stationtype, "Hourly Rain (mm/hr)", "rain.hourlyrate.mmhr",
-                                  "{{ value_json.rain.hourlyrate.mmhr }}", unit_of_measurement="mm/hr", icon="mdi:water", state_class="total")
-            __translate_topic_to_dict(data_dict, "rain.hourlyrate.inhr", __rounded(float(value)))
-            __translate_topic_to_dict(data_dict, "rain.hourlyrate.mmhr", __rounded(__convert_in_to_mm(value)))  # Convert inches/hr to mm/hr
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Hourly Rain Rate (in/h)", "rain.hourlyrate.inh",
+                                  "{{ value_json.rain.hourlyrate.inh }}", unit_of_measurement="in/h", icon="mdi:water", state_class="total")
+            send_ha_sensor_config(send_ha_config, mac, stationtype, "Hourly Rain (mm/h)", "rain.hourlyrate.mmh",
+                                  "{{ value_json.rain.hourlyrate.mmh }}", unit_of_measurement="mm/h", icon="mdi:water", state_class="total")
+            __translate_topic_to_dict(data_dict, "rain.hourlyrate.inh", __rounded(float(value)))
+            __translate_topic_to_dict(data_dict, "rain.hourlyrate.mmh", __rounded(__convert_in_to_mm(value)))  # Convert inches/h to mm/h
         elif key == "eventrainin":
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Event Rain (in)", "rain.event.in", "{{ value_json.rain.event.in }}",
