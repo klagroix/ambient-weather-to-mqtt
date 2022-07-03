@@ -4,6 +4,7 @@ import logging
 import mqtt
 import json
 import fasteners
+import math
 from flask import Flask, request
 from loguru import logger
 from mergedeep import merge
@@ -114,6 +115,13 @@ def __convert_f_to_c(value):
     return (float(value) - 32) * 5 / 9
 
 
+def __convert_c_to_f(value):
+    """
+    Converts celcius to farenheit
+    """
+    return (float(value) * 9 / 5) + 32
+
+
 def __convert_inhg_to_hpa(value):
     """
     Converts inHg to hPa
@@ -154,6 +162,16 @@ def __convert_wm2_to_lux(value):
     Convert W/m^2 to lux (See https://ambientweather.com/faqs/question/view/id/1452/.)
     """
     return float(value) * 126.7
+
+
+def __calculate_dew_point_c(temp, humidity):
+    """
+    Calculates the dew point (Celsius) from the temperature and relative humidity
+    """
+    A = 17.625
+    B = 243.04
+    result = ((A * temp) / (B + temp)) + math.log(humidity / 100.0)
+    return (B * result) / (A - result)
 
 
 def __create_dict(elements, value):
@@ -266,6 +284,10 @@ def generate_sensor_dict(args, send_ha_config=False):
     mac = None
     stationtype = "UNKNOWN"
 
+    # For use in other calculations
+    temp_c = None
+    humidity = None
+
     # Parse MAC and type separately as we want these pre-set before we wend HA configs
     if "mac" in args:
         mac = args["mac"]
@@ -300,9 +322,10 @@ def generate_sensor_dict(args, send_ha_config=False):
                                   "{{ value_json.humidity.indoor.percentage }}", unit_of_measurement="%", device_class="humidity")
             __translate_topic_to_dict(data_dict, "humidity.indoor.percentage", int(value))
         elif key == "humidity":
+            humidity = int(value)
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Outdoor Humidity", "humidity.outdoor.percentage",
                                   "{{ value_json.humidity.outdoor.percentage }}", unit_of_measurement="%", device_class="humidity")
-            __translate_topic_to_dict(data_dict, "humidity.outdoor.percentage", int(value))
+            __translate_topic_to_dict(data_dict, "humidity.outdoor.percentage", humidity)
         elif key == "tempinf":
             # Only send once as HA supports conversion (https://developers.home-assistant.io/docs/core/entity/sensor/#available-device-classes)
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Indoor Temperature", "temperature.indoor.celsius",
@@ -310,11 +333,12 @@ def generate_sensor_dict(args, send_ha_config=False):
             __translate_topic_to_dict(data_dict, "temperature.indoor.fahrenheit", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "temperature.indoor.celsius", __rounded(__convert_f_to_c(value)))  # Convert F to C
         elif key == "tempf":
+            temp_c = __convert_f_to_c(value)  # Convert F to C
             # Only send once as HA supports conversion (https://developers.home-assistant.io/docs/core/entity/sensor/#available-device-classes)
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Outdoor Temperature", "temperature.outdoor.celsius",
                                   "{{ value_json.temperature.outdoor.celsius }}", unit_of_measurement="°C", device_class="temperature")
             __translate_topic_to_dict(data_dict, "temperature.outdoor.fahrenheit", __rounded(float(value)))
-            __translate_topic_to_dict(data_dict, "temperature.outdoor.celsius", __rounded(__convert_f_to_c(value)))  # Convert F to C
+            __translate_topic_to_dict(data_dict, "temperature.outdoor.celsius", __rounded(temp_c))
         elif key == "baromrelin":
             # Only send once as HA supports conversion (https://developers.home-assistant.io/docs/core/entity/sensor/#available-device-classes)
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Relative Pressure", "pressure.relative.mmhg",
@@ -457,6 +481,15 @@ def generate_sensor_dict(args, send_ha_config=False):
             send_ha_sensor_config(send_ha_config, mac, stationtype, "UV Index", "uv.index", "{{ value_json.uv.index }}", unit_of_measurement="Index",
                                   icon="mdi:white-balance-sunny")
             __translate_topic_to_dict(data_dict, "uv.index", int(value))
+
+    # Calculate dew point from the temp and humidity
+    if temp_c is not None and humidity is not None:
+        dew_point_c = __calculate_dew_point_c(temp_c, humidity)
+        # Only send once as HA supports conversion (https://developers.home-assistant.io/docs/core/entity/sensor/#available-device-classes)
+        send_ha_sensor_config(send_ha_config, mac, stationtype, "Dew Point Temperature", "temperature.dewpoint.celsius",
+                              "{{ value_json.temperature.dewpoint.celsius }}", unit_of_measurement="°C", device_class="temperature")
+        __translate_topic_to_dict(data_dict, "temperature.dewpoint.fahrenheit", __rounded(__convert_c_to_f(value)))  # Convert C to F
+        __translate_topic_to_dict(data_dict, "temperature.dewpoint.celsius", __rounded(dew_point_c))
 
     logger.info("Done generating dict")
     return data_dict
