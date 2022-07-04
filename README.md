@@ -8,23 +8,25 @@ I'm sure there are other (read: better) solutions out there for this but I (a) w
 
 ## How it works
 
-Once the container is [running](#running) and the weather station is [configured](#configure-the-weather-station), The weather station sends a request to ambient-weather-to-mqtt periodically. On a new request, ambient-weather-to-mqtt will send a MQTT messages to Home Asistant notifying it of all the available sensors. Every subsequent request, ambient-weather-to-mqtt sends a json payload containing all the sensor data to MQTT. Home Assistant will parse this into individual sensor data.    
+Once the container is [running](#running) and the weather station is [configured](#configure-the-weather-station), The weather station sends a request to ambient-weather-to-mqtt periodically. On a new request, ambient-weather-to-mqtt will send a MQTT messages to Home Asistant notifying it of all the available sensors. Every subsequent request, ambient-weather-to-mqtt sends a [json payload](/docs/Example%20JSON%20payload.md) containing all the sensor data to MQTT. Home Assistant will parse this into individual sensor data.    
 If you're not using Home Assistant or don't want the device/sensors to show automaitcally, set the `SEND_HA_DISCOVERY_CONFIG` environment variable to `0`.
 
-For many sensors, Home Asistant supports selecting the unit type:    
-![Home Assistant entity with multiple units](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/ha-unit-select.png?raw=true)
+For many sensors, Home Assistant supports selecting the unit type:    
+![Home Assistant entity with multiple units](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/images/ha-unit-select.png?raw=true)
 
-Unfortuntely for others, there is no unit type selection for things like speed (kph/mph) and volume (mm/in):    
-![Home Assistant entity with no unit selection](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/ha-no-unit-select.png?raw=true)
+Unfortuntely for others, there is no unit type selection for things like speed (kph/mph) and volume (mm/in) (example from the cloud-based [Ambient Weather Station integration](https://www.home-assistant.io/integrations/ambient_station/)):    
+![Home Assistant entity with no unit selection](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/images/ha-no-unit-select.png?raw=true)
 
-To combat this, ambient-weather-to-mqtt creates a multiple sensors for measurements that Home Assistant can't automatically convert:    
-![Home Assistant multiple entities for different units](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/ha-multiple-entities-units.png?raw=true)
+To combat this, ambient-weather-to-mqtt creates multiple sensors for measurements that Home Assistant can't automatically convert:    
+![Home Assistant multiple entities for different units](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/images/ha-multiple-entities-units.png?raw=true)
 
+
+For a full list of sensors, see [Sensors.md](/docs/Sensors.md)
 
 <details>
   <summary>Example Home Assistant Device</summary>
 
-  ![Home Assistant example device](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/ha-example-device.png?raw=true)
+  ![Home Assistant example device](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/images/ha-example-device.png?raw=true)
 </details>
 
 ## Running
@@ -89,6 +91,8 @@ docker run --rm \
   spec:
     replicas: 1
     revisionHistoryLimit: 3
+    strategy:
+      type: Recreate
     selector:
       matchLabels:
         name: ambient-weather-to-mqtt
@@ -172,7 +176,7 @@ docker run --rm \
 ## Configure the Weather Station
 
 To configure your weather station to send to ambient-weather-to-mqtt, open the awnet app and set the customized config as follows:    
-![awnet configuration](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/awnet-config.png?raw=true)
+![awnet configuration](https://github.com/klagroix/ambient-weather-to-mqtt/blob/main/docs/images/awnet-config.png?raw=true)
 
 **NOTE:** The trailing questionmark is required! If you don't include it, ambient-weather-to-mqtt won't work. 
 
