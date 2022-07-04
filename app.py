@@ -164,14 +164,60 @@ def __convert_wm2_to_lux(value):
     return float(value) * 126.7
 
 
-def __calculate_dew_point_c(temp, humidity):
+def __calculate_dew_point_c(temp_c, humidity):
     """
     Calculates the dew point (Celsius) from the temperature and relative humidity
+    :param temp_c: the temperature in celsius
+    :param humidity: the relatie humidity (%)
     """
     A = 17.625
     B = 243.04
-    result = ((A * temp) / (B + temp)) + math.log(humidity / 100.0)
+    result = ((A * temp_c) / (B + temp_c)) + math.log(humidity / 100.0)
     return (B * result) / (A - result)
+
+
+def __calculate_feels_like_temp(temp_f, humidity, wind_speed_mph):
+    """
+    Calculates the 'feels like' temperature
+    :param temp_f: the temerature in farenheit
+    :param humidity: the relatie humidity (%)
+    :param wind_speed_mph: the wind speed in mph
+    """
+
+    # References:
+    # https://ambientweather.com/faqs/question/view/id/2033/
+    # https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
+    # https://sciencing.com/calculate-wind-chill-factor-5981683.html
+
+    # If it's cold, we use the wind chill
+    # The Ambient Weather link above has a different threshold than the sciencing.com link.
+    # As sciencing.com sounds more 'sciency', I'm starting with those thresholds for now.
+    if temp_f <= 50 and wind_speed_mph >= 3:
+        # Wind chill = 35.74 + 0.6215T – 35.75 (V^0.16) + 0.4275T (V^0.16)
+        return 35.74 + (0.6215 * temp_f) - 35.75 * (wind_speed_mph ** 0.16) + ((0.4275 * temp_f) * (wind_speed_mph ** 0.16))
+
+    # If it's warm, use the heat index
+    # Using https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml for this
+    if temp_f >= 80:
+        # Steadman
+        heat_index_temp = 0.5 * (temp_f + 61.0 + ((temp_f - 68.0) * 1.2) + (humidity * 0.094))
+
+        # Rothfusz regression
+        if heat_index_temp >= 80:
+            heat_index_temp = (
+                -42.379 + 2.04901523 * temp_f + 10.14333127 * humidity - 0.22475541 * temp_f * humidity - 0.00683783 *
+                temp_f * temp_f - 0.05481717 * humidity * humidity + 0.00122874 * temp_f * temp_f * humidity + 0.00085282 *
+                temp_f * humidity * humidity - 0.00000199 * temp_f * temp_f * humidity * humidity
+                )
+            if humidity < 13 and temp_f >= 80 and temp_f <= 112:
+                heat_index_temp = heat_index_temp - ((13 - humidity) / 4) * math.sqrt((17 - math.fabs(temp_f - 95.0)) / 17)
+            if humidity > 85 and temp_f >= 80 and temp_f <= 87:
+                heat_index_temp = heat_index_temp + ((humidity - 85) / 10) * ((87 - temp_f) / 5)
+
+        return heat_index_temp
+
+    # Netiher wind chill or heat index take effect. Return the current temp.
+    return float(temp_f)
 
 
 def __create_dict(elements, value):
@@ -286,7 +332,9 @@ def generate_sensor_dict(args, send_ha_config=False):
 
     # For use in other calculations
     temp_c = None
+    temp_f = None
     humidity = None
+    wind_speed_mph = None
 
     # Parse MAC and type separately as we want these pre-set before we wend HA configs
     if "mac" in args:
@@ -333,11 +381,12 @@ def generate_sensor_dict(args, send_ha_config=False):
             __translate_topic_to_dict(data_dict, "temperature.indoor.fahrenheit", __rounded(float(value)))
             __translate_topic_to_dict(data_dict, "temperature.indoor.celsius", __rounded(__convert_f_to_c(value)))  # Convert F to C
         elif key == "tempf":
+            temp_f = float(value)
             temp_c = __convert_f_to_c(value)  # Convert F to C
             # Only send once as HA supports conversion (https://developers.home-assistant.io/docs/core/entity/sensor/#available-device-classes)
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Outdoor Temperature", "temperature.outdoor.celsius",
                                   "{{ value_json.temperature.outdoor.celsius }}", unit_of_measurement="°C", device_class="temperature")
-            __translate_topic_to_dict(data_dict, "temperature.outdoor.fahrenheit", __rounded(float(value)))
+            __translate_topic_to_dict(data_dict, "temperature.outdoor.fahrenheit", __rounded(temp_f))
             __translate_topic_to_dict(data_dict, "temperature.outdoor.celsius", __rounded(temp_c))
         elif key == "baromrelin":
             # Only send once as HA supports conversion (https://developers.home-assistant.io/docs/core/entity/sensor/#available-device-classes)
@@ -358,6 +407,7 @@ def generate_sensor_dict(args, send_ha_config=False):
                                   "{{ value_json.wind.direction.degrees }}", unit_of_measurement="°", icon="mdi:compass")
             __translate_topic_to_dict(data_dict, "wind.direction.degrees", int(value))
         elif key == "windspeedmph":
+            wind_speed_mph = float(value)
             # HA doesnt support conversion natively in the entity UI. As such, we send multiple and users can choose
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Speed (mph)", "wind.speed.mph", "{{ value_json.wind.speed.mph }}",
                                   unit_of_measurement="mph", icon="mdi:weather-windy")
@@ -369,7 +419,7 @@ def generate_sensor_dict(args, send_ha_config=False):
                                   unit_of_measurement="ft/s", icon="mdi:weather-windy")
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Wind Speed (knots)", "wind.speed.knots", "{{ value_json.wind.speed.knots }}",
                                   unit_of_measurement="knots", icon="mdi:weather-windy")
-            __translate_topic_to_dict(data_dict, "wind.speed.mph", __rounded(float(value)))
+            __translate_topic_to_dict(data_dict, "wind.speed.mph", __rounded(wind_speed_mph))
             __translate_topic_to_dict(data_dict, "wind.speed.kph", __rounded(__convert_mph_to_kph(value)))  # Convert mph to kph
             __translate_topic_to_dict(data_dict, "wind.speed.mps", __rounded(__convert_mph_to_mps(value)))  # Convert mph to m/s
             __translate_topic_to_dict(data_dict, "wind.speed.ftps", __rounded(__convert_mph_to_fps(value)))  # Convert mph to ft/s
@@ -490,6 +540,14 @@ def generate_sensor_dict(args, send_ha_config=False):
                               "{{ value_json.temperature.dewpoint.celsius }}", unit_of_measurement="°C", device_class="temperature")
         __translate_topic_to_dict(data_dict, "temperature.dewpoint.fahrenheit", __rounded(__convert_c_to_f(value)))  # Convert C to F
         __translate_topic_to_dict(data_dict, "temperature.dewpoint.celsius", __rounded(dew_point_c))
+
+    # Calculate 'Feels Like' from the temp, humidity, and windspeed
+    if temp_f is not None and humidity is not None and wind_speed_mph is not None:
+        feels_like_f = __calculate_feels_like_temp(temp_f, humidity, wind_speed_mph)
+        send_ha_sensor_config(send_ha_config, mac, stationtype, "Feels Like Temperature", "temperature.feelslike.celsius",
+                              "{{ value_json.temperature.feelslike.celsius }}", unit_of_measurement="°C", device_class="temperature")
+        __translate_topic_to_dict(data_dict, "temperature.feelslike.fahrenheit", __rounded(feels_like_f))
+        __translate_topic_to_dict(data_dict, "temperature.feelslike.celsius", __rounded(__convert_f_to_c(feels_like_f)))  # Convert F to C
 
     logger.info("Done generating dict")
     return data_dict
