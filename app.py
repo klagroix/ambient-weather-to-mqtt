@@ -87,19 +87,11 @@ def __rounded(value):
     """
     return round(float(value), PRECISION)
 
-
-def __convert_battery_to_str(value):
+def __convert_battery_to_percent(value):
     """
-    Converts the battery int value to a human recognizable string
+    Converts the battery int value to a percentage
     """
-    if int(value) == 1:
-        value = "Normal"
-    elif int(value) == 0:
-        value = "Low"
-    else:
-        value = "Unknown"
-    return value
-
+    value = int(value) * 100
 
 def __convert_in_to_mm(value):
     """
@@ -359,12 +351,12 @@ def generate_sensor_dict(args, send_ha_config=False):
             pass  # This was set previously outside of the loop
         elif key == "battout":
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Outdoor Battery", "station.battery.outdoor",
-                                  "{{ value_json.station.battery.outdoor }}", device_class="battery", icon="mdi:battery")
-            __translate_topic_to_dict(data_dict, "station.battery.outdoor", __convert_battery_to_str(value))
+                                  "{{ value_json.station.battery.outdoor }}", unit_of_measurement="%", device_class="battery", icon="mdi:battery")
+            __translate_topic_to_dict(data_dict, "station.battery.outdoor", __convert_battery_to_percent(value))
         elif key == "batt_co2":
             send_ha_sensor_config(send_ha_config, mac, stationtype, "CO2 Battery", "station.battery.co2", "{{ value_json.station.battery.co2 }}",
-                                  device_class="battery", icon="mdi:battery")
-            __translate_topic_to_dict(data_dict, "station.battery.co2", __convert_battery_to_str(value))
+                                  unit_of_measurement="%", device_class="battery", icon="mdi:battery")
+            __translate_topic_to_dict(data_dict, "station.battery.co2", __convert_battery_to_percent(value))
         elif key == "humidityin":
             send_ha_sensor_config(send_ha_config, mac, stationtype, "Indoor Humidity", "humidity.indoor.percentage",
                                   "{{ value_json.humidity.indoor.percentage }}", unit_of_measurement="%", device_class="humidity")
