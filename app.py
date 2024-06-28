@@ -91,7 +91,7 @@ def __convert_battery_to_percent(value):
     """
     Converts the battery int value to a percentage
     """
-    value = int(value) * 100
+    return int(value) * 100
 
 def __convert_in_to_mm(value):
     """
